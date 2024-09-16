@@ -2,14 +2,14 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "lib"))
-from splunklib.searchcommands import dispatch, ReportingCommand, Configuration, Option, validators
+from splunklib.searchcommands import dispatch, StreamingCommand, Configuration, Option, validators
 from vincenty import vincenty
 from haversine import haversine, Unit
 from splunklib.searchcommands import environment
 
 
 @Configuration()
-class GeoDistanceCommand(ReportingCommand):
+class GeoDistanceCommand(StreamingCommand):
     """ Computes the distance of adjacent events
 
     ##Syntax
@@ -74,18 +74,13 @@ class GeoDistanceCommand(ReportingCommand):
         doc='''
         **Syntax:** **haversine=** *<fieldname>*
         **Description:** If set to true, this calculates the harversine distance instead of the vincenty distance''',
-        require=False, validate=validators.Boolean(), default=False)
+        require=False, validate=validators.Boolean(), default=True)
 
     def __init__(self):
         super(GeoDistanceCommand, self).__init__()
         environment.splunklib_logger = self._logger
 
-    @Configuration()
-    def map(self, events):
-        for event in events:
-            yield event
-
-    def reduce(self, events):
+    def stream(self, events):
         latitude = self.latfield
         longitude = self.longfield
         relative_distance = self.output_field
